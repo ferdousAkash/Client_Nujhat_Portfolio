@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nujhat Fariha Khan | Architecture Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- PageFlip -->
+    <script src="https://unpkg.com/page-flip/dist/js/page-flip.browser.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#0a0a0a',
+                        light: '#f4f4f5',
+                        accent: '#ff4500'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #f4f4f5;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: white; }
+        .cursor-outline { width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.5); transition: width 0.2s, height 0.2s; }
+
+        /* Grain effect */
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; opacity: 0.04;
+            background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+
+        /* Architecture grid background */
+        .arch-grid {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .text-outline {
+            color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.2); transition: all 0.3s ease;
+        }
+        .text-outline:hover { color: #f4f4f5; -webkit-text-stroke: 1px #f4f4f5; }
+
+        .marquee {
+            white-space: nowrap; overflow: hidden; display: inline-block; animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+        /* Flipbook Styles */
+        .flip-book {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin: 0 auto;
+            background: #fff;
+        }
+        .page {
+            background-color: #fff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .page.--left {
+            border-right: 1px solid rgba(0,0,0,0.1);
+            box-shadow: inset -5px 0 20px rgba(0,0,0,0.1);
+        }
+        .page.--right {
+            border-left: 1px solid rgba(0,0,0,0.1);
+            box-shadow: inset 5px 0 20px rgba(0,0,0,0.1);
+        }
+        .page canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .page-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ccc;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-dark">
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+    <div class="grain"></div>
+    <div class="arch-grid"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full p-6 mix-blend-difference z-40 flex justify-between items-center text-sm tracking-widest uppercase font-sans">
+        <div>Nujhat Fariha Khan</div>
+        <div class="flex gap-6">
+            <a href="#workbook" class="hover-target">Workbook</a>
+            <a href="#about" class="hover-target">About</a>
+            <a href="#contact" class="hover-target">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="h-screen flex flex-col justify-center items-center relative overflow-hidden px-4">
+        <h1 class="text-[10vw] md:text-[8vw] font-display font-bold leading-none tracking-tighter text-center uppercase relative z-10 hero-title">
+            <span class="block text-outline">Architecture</span>
+            <span class="block">Portfolio</span>
+        </h1>
+        <div class="mt-8 text-center max-w-xl mx-auto hero-subtitle">
+            <p class="text-xl md:text-2xl font-light text-gray-400 mb-2">B.S ARCHITECTURE | NJIT</p>
+            <p class="text-sm tracking-[0.3em] uppercase">Selected Works 2024-2026</p>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce">
+            <span class="text-xs uppercase tracking-widest mb-2">Scroll</span>
+            <div class="w-[1px] h-12 bg-white"></div>
+        </div>
+    </section>
+
+    <!-- Workbook Flipbook Section -->
+    <section id="workbook" class="py-20 px-6 max-w-[1600px] mx-auto min-h-screen flex flex-col justify-center items-center relative z-20">
+        <div class="text-center mb-12 reveal-up">
+            <h2 class="text-4xl md:text-6xl font-display font-bold uppercase mb-4">Interactive Workbook</h2>
+            <p class="text-gray-400 font-light tracking-widest uppercase text-sm">Drag the corners to flip the pages</p>
+        </div>
+        
+        <!-- The Flipbook Container -->
+        <div id="book-container" class="relative w-full max-w-[1200px] aspect-[2/1] mx-auto reveal-fade hover-target">
+            <!-- StPageFlip needs a specific DOM structure -->
+            <div id="book" class="flip-book">
+                <!-- Pages will be injected here by JS -->
+            </div>
+            <!-- Interactive hints -->
+            <div class="absolute top-1/2 -left-12 -translate-y-1/2 text-gray-600 animate-pulse pointer-events-none">&larr; Drag</div>
+            <div class="absolute top-1/2 -right-12 -translate-y-1/2 text-gray-600 animate-pulse pointer-events-none">Drag &rarr;</div>
+        </div>
+        
+        <div class="mt-12 flex items-center justify-center gap-6 reveal-up">
+            <button id="prev-btn" class="hover-target text-sm uppercase tracking-widest border border-gray-700 px-6 py-2 rounded-full hover:bg-white hover:text-dark transition-colors">&larr; Prev</button>
+            <span id="page-count" class="text-gray-500 font-sans tracking-widest text-sm">Loading...</span>
+            <button id="next-btn" class="hover-target text-sm uppercase tracking-widest border border-gray-700 px-6 py-2 rounded-full hover:bg-white hover:text-dark transition-colors">Next &rarr;</button>
+        </div>
+    </section>
+
+    <!-- Marquee Divider -->
+    <div class="w-full bg-white text-dark py-4 overflow-hidden whitespace-nowrap mt-20 mb-20">
+        <div class="marquee font-display font-bold uppercase text-2xl tracking-widest">
+            SELECTED WORKS 2024-2026 &nbsp; &mdash; &nbsp; SELECTED WORKS 2024-2026 &nbsp; &mdash; &nbsp; SELECTED WORKS 2024-2026 &nbsp; &mdash; &nbsp; SELECTED WORKS 2024-2026 &nbsp; &mdash; &nbsp; SELECTED WORKS 2024-2026 &nbsp; &mdash; &nbsp; 
+        </div>
+    </div>
+
+    <!-- About Section (Reverted to concise) -->
+    <section id="about" class="py-20 px-6 md:px-20 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-5 font-display text-4xl md:text-6xl uppercase leading-tight font-bold reveal-text">
+                Designing spaces that <br>
+                <span class="text-gray-500">positively shape</span><br>
+                human experience.
+            </div>
+            <div class="md:col-span-7 flex flex-col justify-center text-lg md:text-xl text-gray-300 font-light leading-relaxed reveal-fade">
+                <p class="mb-6">
+                    I am an architecture graduate passionate about designing spaces that positively shape human experience. I am particularly interested in adaptive reuse and socially responsive design.
+                </p>
+                <p>
+                    I believe architecture extends beyond buildings—it is a catalyst for connection, memory, and everyday life. Through research, creativity, and technical design, I strive to create sustainable environments that enrich communities.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-16 mt-32 border-t border-gray-800 pt-16">
+            <!-- Experience -->
+            <div class="reveal-up">
+                <h3 class="font-display text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Experience</h3>
+                
+                <div class="mb-8">
+                    <h4 class="text-white font-semibold">Paul Rudolph Institute for Modern Architecture</h4>
+                    <p class="text-sm text-gray-400 uppercase tracking-wider mb-2 mt-1">Volunteer Archivist & Events Coordinator</p>
+                    <p class="text-xs text-gray-500">June 2025 - Present</p>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-white font-semibold">Peter Coffin Studio</h4>
+                    <p class="text-sm text-gray-400 uppercase tracking-wider mb-2 mt-1">Architect / 3D Modeling Intern</p>
+                    <p class="text-xs text-gray-500">Jan 2026 - Apr 2026</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-semibold">Sthapotik</h4>
+                    <p class="text-sm text-gray-400 uppercase tracking-wider mb-2 mt-1">Architectural Intern</p>
+                    <p class="text-xs text-gray-500">Jun 2023 - July 2023</p>
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div class="reveal-up" style="transition-delay: 0.1s">
+                <h3 class="font-display text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Education</h3>
+                
+                <div class="mb-8">
+                    <h4 class="text-white font-semibold">New Jersey Institute of Technology</h4>
+                    <p class="text-sm text-gray-400 uppercase tracking-wider mb-2 mt-1">B.S in Architecture</p>
+                    <p class="text-xs text-gray-500">Jan 2022 - May 2026</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-semibold">BRAC University</h4>
+                    <p class="text-sm text-gray-400 uppercase tracking-wider mb-2 mt-1">Bachelor of Architecture</p>
+                    <p class="text-xs text-gray-500">Jan 2020 - Dec 2021</p>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="reveal-up" style="transition-delay: 0.2s">
+                <h3 class="font-display text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Skills</h3>
+                
+                <div class="mb-6">
+                    <h4 class="text-white text-sm uppercase tracking-widest mb-3">Design & Modeling</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 border border-gray-700 rounded-full text-xs text-gray-300">Revit</span>
+                        <span class="px-3 py-1 border border-gray-700 rounded-full text-xs text-gray-300">Rhino</span>
+                        <span class="px-3 py-1 border border-gray-700 rounded-full text-xs text-gray-300">AutoCAD</span>
+                        <span class="px-3 py-1 border border-gray-700 rounded-full text-xs text-gray-300">SketchUp</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Contact -->
+    <footer id="contact" class="py-32 px-6 border-t border-gray-800 text-center relative overflow-hidden mt-20">
+        <h2 class="text-4xl md:text-7xl font-display font-bold uppercase mb-12 hover-target inline-block">
+            <a href="mailto:nujhatkhan888@gmail.com" class="text-outline hover:text-white transition-colors duration-300">Get in Touch</a>
+        </h2>
+        
+        <div class="flex flex-col md:flex-row justify-center items-center gap-8 text-gray-400 font-sans tracking-widest text-sm uppercase">
+            <a href="mailto:nujhatkhan888@gmail.com" class="hover:text-white transition-colors">nujhatkhan888@gmail.com</a>
+            <span class="hidden md:block w-1 h-1 bg-gray-700 rounded-full"></span>
+            <span>(929) 543-9242</span>
+            <span class="hidden md:block w-1 h-1 bg-gray-700 rounded-full"></span>
+            <a href="https://linkedin.com/in/nujhatkhan/" target="_blank" class="hover:text-white transition-colors">LinkedIn</a>
+        </div>
+    </footer>
+
+    <!-- Scripts for animations and Flipbook -->
+    <script>
+        // Custom Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+            cursorOutline.animate({ left: `${posX}px`, top: `${posY}px` }, { duration: 500, fill: "forwards" });
+        });
+
+        document.querySelectorAll('.hover-target, a, button').forEach(target => {
+            target.addEventListener('mouseenter', () => {
+                cursorOutline.style.width = '60px';
+                cursorOutline.style.height = '60px';
+                cursorOutline.style.backgroundColor = 'rgba(255,255,255,0.1)';
+            });
+            target.addEventListener('mouseleave', () => {
+                cursorOutline.style.width = '40px';
+                cursorOutline.style.height = '40px';
+                cursorOutline.style.backgroundColor = 'transparent';
+            });
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        const tl = gsap.timeline();
+        tl.from(".hero-title span", { y: 100, opacity: 0, duration: 1, stagger: 0.2, ease: "power4.out", delay: 0.2 })
+          .from(".hero-subtitle p", { y: 20, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" }, "-=0.5")
+          .from("nav", { y: -20, opacity: 0, duration: 0.8, ease: "power2.out" }, "-=0.8");
+
+        gsap.utils.toArray('.reveal-text, .reveal-up').forEach(elem => {
+            gsap.from(elem, {
+                scrollTrigger: { trigger: elem, start: "top 80%" },
+                y: 50, opacity: 0, duration: 1, ease: "power3.out"
+            });
+        });
+
+        gsap.utils.toArray('.reveal-fade').forEach(elem => {
+            gsap.from(elem, {
+                scrollTrigger: { trigger: elem, start: "top 85%" },
+                opacity: 0, duration: 1.5, ease: "power2.out"
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        /* --- PDF FLIPBOOK LOGIC --- */
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        
+        let pageFlip;
+        let pdfDocs = [];
+        const book = document.getElementById('book');
+        const pageCountSpan = document.getElementById('page-count');
+
+        // Load both PDF parts
+        Promise.all([
+            pdfjsLib.getDocument('portfolio_part1.pdf').promise,
+            pdfjsLib.getDocument('portfolio_part2.pdf').promise
+        ]).then(pdfs => {
+            pdfDocs = pdfs;
+            const numPagesPart1 = pdfs[0].numPages;
+            const numPagesPart2 = pdfs[1].numPages;
+            const totalPages = numPagesPart1 + numPagesPart2;
+            
+            // Generate DOM nodes for pages
+            for(let i = 1; i <= totalPages; i++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                
+                const loader = document.createElement('div');
+                loader.className = 'page-loading';
+                loader.innerText = 'Loading...';
+                
+                const canvas = document.createElement('canvas');
+                canvas.id = 'page-' + i;
+                canvas.style.opacity = '0';
+                canvas.style.transition = 'opacity 0.5s ease';
+                
+                pageDiv.appendChild(loader);
+                pageDiv.appendChild(canvas);
+                book.appendChild(pageDiv);
+            }
+            
+            // Initialize PageFlip
+            pageFlip = new St.PageFlip(book, {
+                width: 700, // Landscape width
+                height: 400, // Landscape height
+                size: "stretch",
+                minWidth: 315,
+                maxWidth: 1000,
+                minHeight: 420,
+                maxHeight: 1350,
+                maxShadowOpacity: 0.5,
+                showCover: true,
+                mobileScrollSupport: false
+            });
+            
+            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+            
+            // Render initial pages
+            renderPage(1);
+            renderPage(2);
+            renderPage(3);
+            
+            pageCountSpan.innerText = `Page 1 of ${totalPages}`;
+
+            // Handle flip event to render upcoming pages lazily
+            pageFlip.on('flip', (e) => {
+                const currentPage = e.data + 1;
+                pageCountSpan.innerText = `Page ${currentPage} of ${totalPages}`;
+                
+                // Render current and adjacent pages
+                renderPage(currentPage - 1);
+                renderPage(currentPage);
+                renderPage(currentPage + 1);
+                renderPage(currentPage + 2);
+            });
+
+            // Buttons
+            document.getElementById('prev-btn').addEventListener('click', () => { pageFlip.flipPrev(); });
+            document.getElementById('next-btn').addEventListener('click', () => { pageFlip.flipNext(); });
+            
+        }).catch(err => {
+            console.error("Error loading PDF parts:", err);
+            book.innerHTML = '<div class="text-white text-center w-full p-10 border border-gray-700">Error loading portfolio PDF parts. Please make sure the files are in the same directory.</div>';
+        });
+
+        // Function to render a specific page seamlessly across both PDFs
+        function renderPage(num) {
+            if(!pdfDocs.length) return;
+            const totalPages = pdfDocs[0].numPages + pdfDocs[1].numPages;
+            if(num < 1 || num > totalPages) return;
+            
+            const canvas = document.getElementById('page-' + num);
+            if(!canvas || canvas.getAttribute('data-rendered') === 'true') return;
+            
+            canvas.setAttribute('data-rendered', 'true'); // Prevent multiple render calls
+            
+            // Determine which PDF document and which page number to fetch
+            let targetPdf = pdfDocs[0];
+            let pageNumToFetch = num;
+            if (num > pdfDocs[0].numPages) {
+                targetPdf = pdfDocs[1];
+                pageNumToFetch = num - pdfDocs[0].numPages;
+            }
+            
+            targetPdf.getPage(pageNumToFetch).then(page => {
+                // Set scale high enough for good quality
+                const viewport = page.getViewport({scale: 2.0});
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                page.render(renderContext).promise.then(() => {
+                    canvas.style.opacity = '1';
+                });
+            });
+        }
+    </script>
+</body>
+</html>
