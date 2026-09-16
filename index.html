@@ -328,122 +328,54 @@
             });
         });
 
-        /* --- PDF FLIPBOOK LOGIC --- */
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        
-        let pageFlip;
-        let pdfDocs = [];
+        /* --- OPTIMIZED FLIPBOOK LOGIC --- */
         const book = document.getElementById('book');
         const pageCountSpan = document.getElementById('page-count');
+        const totalPages = 30; // Pre-extracted PDF pages
+        
+        // Generate DOM nodes for images
+        for(let i = 1; i <= totalPages; i++) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page';
+            
+            // Using standard img tags with lazy loading for blazing fast performance
+            const img = document.createElement('img');
+            img.src = `pages/page-${i}.jpg`;
+            img.loading = 'lazy';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            
+            pageDiv.appendChild(img);
+            book.appendChild(pageDiv);
+        }
+        
+        // Initialize PageFlip
+        const pageFlip = new St.PageFlip(book, {
+            width: 700, // Landscape width
+            height: 400, // Landscape height
+            size: "stretch",
+            minWidth: 315,
+            maxWidth: 1000,
+            minHeight: 420,
+            maxHeight: 1350,
+            maxShadowOpacity: 0.5,
+            showCover: true,
+            mobileScrollSupport: false
+        });
+        
+        pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+        pageCountSpan.innerText = `Page 1 of ${totalPages}`;
 
-        // Load both PDF parts
-        Promise.all([
-            pdfjsLib.getDocument('portfolio_part1.pdf').promise,
-            pdfjsLib.getDocument('portfolio_part2.pdf').promise
-        ]).then(pdfs => {
-            pdfDocs = pdfs;
-            const numPagesPart1 = pdfs[0].numPages;
-            const numPagesPart2 = pdfs[1].numPages;
-            const totalPages = numPagesPart1 + numPagesPart2;
-            
-            // Generate DOM nodes for pages
-            for(let i = 1; i <= totalPages; i++) {
-                const pageDiv = document.createElement('div');
-                pageDiv.className = 'page';
-                
-                const loader = document.createElement('div');
-                loader.className = 'page-loading';
-                loader.innerText = 'Loading...';
-                
-                const canvas = document.createElement('canvas');
-                canvas.id = 'page-' + i;
-                canvas.style.opacity = '0';
-                canvas.style.transition = 'opacity 0.5s ease';
-                
-                pageDiv.appendChild(loader);
-                pageDiv.appendChild(canvas);
-                book.appendChild(pageDiv);
-            }
-            
-            // Initialize PageFlip
-            pageFlip = new St.PageFlip(book, {
-                width: 700, // Landscape width
-                height: 400, // Landscape height
-                size: "stretch",
-                minWidth: 315,
-                maxWidth: 1000,
-                minHeight: 420,
-                maxHeight: 1350,
-                maxShadowOpacity: 0.5,
-                showCover: true,
-                mobileScrollSupport: false
-            });
-            
-            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
-            
-            // Render initial pages
-            renderPage(1);
-            renderPage(2);
-            renderPage(3);
-            
-            pageCountSpan.innerText = `Page 1 of ${totalPages}`;
-
-            // Handle flip event to render upcoming pages lazily
-            pageFlip.on('flip', (e) => {
-                const currentPage = e.data + 1;
-                pageCountSpan.innerText = `Page ${currentPage} of ${totalPages}`;
-                
-                // Render current and adjacent pages
-                renderPage(currentPage - 1);
-                renderPage(currentPage);
-                renderPage(currentPage + 1);
-                renderPage(currentPage + 2);
-            });
-
-            // Buttons
-            document.getElementById('prev-btn').addEventListener('click', () => { pageFlip.flipPrev(); });
-            document.getElementById('next-btn').addEventListener('click', () => { pageFlip.flipNext(); });
-            
-        }).catch(err => {
-            console.error("Error loading PDF parts:", err);
-            book.innerHTML = '<div class="text-white text-center w-full p-10 border border-gray-700">Error loading portfolio PDF parts. Please make sure the files are in the same directory.</div>';
+        // Handle flip event to update page numbers
+        pageFlip.on('flip', (e) => {
+            const currentPage = e.data + 1;
+            pageCountSpan.innerText = `Page ${currentPage} of ${totalPages}`;
         });
 
-        // Function to render a specific page seamlessly across both PDFs
-        function renderPage(num) {
-            if(!pdfDocs.length) return;
-            const totalPages = pdfDocs[0].numPages + pdfDocs[1].numPages;
-            if(num < 1 || num > totalPages) return;
-            
-            const canvas = document.getElementById('page-' + num);
-            if(!canvas || canvas.getAttribute('data-rendered') === 'true') return;
-            
-            canvas.setAttribute('data-rendered', 'true'); // Prevent multiple render calls
-            
-            // Determine which PDF document and which page number to fetch
-            let targetPdf = pdfDocs[0];
-            let pageNumToFetch = num;
-            if (num > pdfDocs[0].numPages) {
-                targetPdf = pdfDocs[1];
-                pageNumToFetch = num - pdfDocs[0].numPages;
-            }
-            
-            targetPdf.getPage(pageNumToFetch).then(page => {
-                // Set scale high enough for good quality
-                const viewport = page.getViewport({scale: 2.0});
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                const renderContext = {
-                    canvasContext: canvas.getContext('2d'),
-                    viewport: viewport
-                };
-                
-                page.render(renderContext).promise.then(() => {
-                    canvas.style.opacity = '1';
-                });
-            });
-        }
+        // Buttons
+        document.getElementById('prev-btn').addEventListener('click', () => { pageFlip.flipPrev(); });
+        document.getElementById('next-btn').addEventListener('click', () => { pageFlip.flipNext(); });
     </script>
 </body>
 </html>
